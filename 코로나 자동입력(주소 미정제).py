@@ -9,8 +9,10 @@ from selenium.webdriver.support import expected_conditions as EC
 # 핵심 기입 정보
 year = "2021" # 년
 month = "12" #월
-date  = "28" #일
-
+date  = "31" #일
+날짜 = year+month+date
+read = '주소 확인 완료(20220102).xlsx' #읽을 엑셀 파일
+출력 = '주소 확인('+날짜+').xlsx'#출력 될것
 #파이썬 3.9.7
 #사전작업
 #사전에 열어둔 크롬 페이지로 설정
@@ -35,9 +37,6 @@ driver.switch_to.frame('ifrm')
 # 주민번호 앞자리가 0일시 빠진다
 #핵심 함수
 def 자동입력(이름, 주소1, 주소2, 주민번호1, 주민번호2, 전화번호1, 전화번호2, 전화번호3):
-        
-        
-
         #이름
         driver.execute_script("document.getElementById(\"ptxtPatntNm\").value=\""+이름+"\"")
 
@@ -51,14 +50,6 @@ def 자동입력(이름, 주소1, 주소2, 주민번호1, 주민번호2, 전화�
         driver.execute_script("document.getElementById(\"ptxtPatntMbtlnum1\").value=\""+str(전화번호1)+"\"")
         driver.execute_script("document.getElementById(\"ptxtPatntMbtlnum2\").value=\""+str(전화번호2)+"\"")
         driver.execute_script("document.getElementById(\"ptxtPatntMbtlnum3\").value=\""+str(전화번호3)+"\"")
-
-        #외국인 전용 시퀸스
-        # pchkFrgnrAt
-        # driver.execute_script("document.getElementById(\"pchkFrgnrAt\").click()")
-        # driver.execute_script("document.getElementById(\"pchkErrCheck\").click()")
-        if(주민번호2>4999999) :
-                driver.execute_script("document.getElementById(\"pchkFrgnrAt\").click()")
-                driver.execute_script("document.getElementById(\"pchkErrCheck\").click()")   
 
         #주소(우편번호가 없어도 되는가? 팝업 제어가 되는가?)
         # ptxtPatntRnZip 우편 번호
@@ -135,7 +126,13 @@ def 자동입력(이름, 주소1, 주소2, 주민번호1, 주민번호2, 전화�
         driver.execute_script("document.getElementById(\"pchkNA0012ErrCheck\").click()")
 
 
-        
+        #외국인 전용 시퀸스
+        # pchkFrgnrAt
+        # driver.execute_script("document.getElementById(\"pchkFrgnrAt\").click()")
+        # driver.execute_script("document.getElementById(\"pchkErrCheck\").click()")
+        if(주민번호2>4999999) :
+                driver.execute_script("document.getElementById(\"pchkFrgnrAt\").click()")
+                driver.execute_script("document.getElementById(\"pchkErrCheck\").click()")   
                 
 
         #신고 버튼 눌렸을때 반응
@@ -161,16 +158,32 @@ def 자동입력(이름, 주소1, 주소2, 주민번호1, 주민번호2, 전화�
 #전화번호 -를 기준으로 slice
 #주소 카카오 api를 사용하여 추가 정제
 #현재 키는 590488a94a19d10b3e9a6e876738dc4e 이며 바꿔야될수도?
-#만약 주소가 없다면 저장하고 넘겨버림
+#추가 사항 juso api를 추가 적으로 사용하여 추가 정제
+#현재 키는 devU01TX0FVVEgyMDIxMTIzMDE3MzM1ODExMjA4NDg= 이며 유효기간은 90일로 상당히 짧음
+#만약 주소가 없다면 기존의 주소로 저장하고 넘겨버림
 
-def 주소정제(주소1):
+def 주소정제juso(주소1):
+    url = 'https://www.juso.go.kr/addrlink/addrLinkApi.do' 
+    params = {'keyword': 주소1,'confmKey': "devU01TX0FVVEgyMDIxMTIzMDE3MzM1ODExMjA4NDg=",'resultType' : "json"} 
+    places = requests.get(url, params=params).json()
+    #print(places)
+    #print (places['results']['juso'][0]['roadAddrPart1'])
+    result = ""
+    try:
+        result = places['results']['juso'][0]['roadAddrPart1']
+    except IndexError as e : 
+        if(result == ''):
+            result = 주소1
+    return result
+
+def 주소정제kakao(주소1):
     url = 'https://dapi.kakao.com/v2/local/search/keyword.json' 
     params = {'query': 주소1,'page': 1} 
     headers = {"Authorization": "KakaoAK 590488a94a19d10b3e9a6e876738dc4e"}
     places = requests.get(url, params=params, headers=headers).json()['documents']
     y=""
     try:
-        print(places[0]["road_address_name"])
+        #print(places[0]["road_address_name"])
         y=places[0]["road_address_name"]
     except IndexError as n :
         y=주소1
@@ -180,9 +193,20 @@ def 주소정제(주소1):
     return y
 
 
+def 주소정제(주소1):
+    re = 주소정제juso(주소1)
+    if re != 주소1:
+        return re
+    else:
+        re = 주소정제kakao(주소1)
+    return re
+
+
 
 # 진짜로 읽을 파일
-df = pd.read_excel('주소수정완료(12.26).xlsx')
+# 파일 이름 변수로 변환 read
+#df = pd.read_excel('주소수정완료(12.26).xlsx')
+df = pd.read_excel(read)
 
 x = df.values.tolist()
 print(x)
@@ -199,11 +223,9 @@ for n in range(0,len(x)):
     #주민1정제
     #제로필을 사용하여 정제
     x[n][2]= str(x[n][2]).zfill(6)
+
+    #주소 정제 하지 않음
     
-    #주소 정제 실시안함
-    #주소정제가 실패한경우 입력 실패로 간주하고 다음으로 넘어감
-    #주소1 =  x[n][5]
-    #x[n][5] = 정제주소
     #print(x[n][5])
 
     #전화번호 정제
@@ -211,16 +233,19 @@ for n in range(0,len(x)):
     #print(정제전번)
     
     # 진짜로 입력 하는 함수
-    자동입력(str(x[n][1]), str(x[n][5]), str(x[n][6]), x[n][2], x[n][3], 정제전번[0], 정제전번[1], 정제전번[2])
-    print(str(n+1)+"/"+str(len(x))+" 5초 대기")
-    time.sleep(5)
+    try:
+        자동입력(str(x[n][1]), str(x[n][5]), str(x[n][6]), x[n][2], x[n][3], 정제전번[0], 정제전번[1], 정제전번[2])
+        print(str(n+1)+"/"+str(len(x))+" 5초 대기")
+        time.sleep(5)
+    except:
+        입력실패번호.append(n)
+        print(str(n+1)+"/"+str(len(x))+" 입력실패")
 
 if 입력실패번호 == [] :
-    print("종료")
+    print("전부 입력완료")
     quit()
     
-날짜 = year+month+date
-
+   
 #입력 이후 정제 실패한것들로 다시 엑셀 생성
 y = []
 for n in range(0,len(x)):
@@ -229,7 +254,12 @@ for n in range(0,len(x)):
             y.append(x[n])
 
 # 엑셀 파일 출력
+# 출력 파일 
+
 #df = pd.DataFrame(y,columns=['등록번호', '이름', '주민1','주민2','전화번호','주소1','주소2'])
 #df.to_excel('주소수정필요(12.27).xlsx', sheet_name=str(날짜), index=False, header=True)
-#print("주소수정 필요 파일 확인필요")
+#df.to_excel(출력, index=False, header=True)
+df = pd.DataFrame(y)
+df.to_excel(출력, index=False,header=True)
+print("주소수정 필요 파일 확인필요")
 
