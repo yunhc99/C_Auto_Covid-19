@@ -52,6 +52,14 @@ def 자동입력(이름, 주소1, 주소2, 주민번호1, 주민번호2, 전화�
         driver.execute_script("document.getElementById(\"ptxtPatntMbtlnum2\").value=\""+str(전화번호2)+"\"")
         driver.execute_script("document.getElementById(\"ptxtPatntMbtlnum3\").value=\""+str(전화번호3)+"\"")
 
+        #외국인 전용 시퀸스
+        # pchkFrgnrAt
+        # driver.execute_script("document.getElementById(\"pchkFrgnrAt\").click()")
+        # driver.execute_script("document.getElementById(\"pchkErrCheck\").click()")
+        if(주민번호2>4999999) :
+                driver.execute_script("document.getElementById(\"pchkFrgnrAt\").click()")
+                driver.execute_script("document.getElementById(\"pchkErrCheck\").click()")   
+
         #주소(우편번호가 없어도 되는가? 팝업 제어가 되는가?)
         # ptxtPatntRnZip 우편 번호
         # ptxtPatntRdnmadr 도로명 주소
@@ -127,13 +135,7 @@ def 자동입력(이름, 주소1, 주소2, 주민번호1, 주민번호2, 전화�
         driver.execute_script("document.getElementById(\"pchkNA0012ErrCheck\").click()")
 
 
-        #외국인 전용 시퀸스
-        # pchkFrgnrAt
-        # driver.execute_script("document.getElementById(\"pchkFrgnrAt\").click()")
-        # driver.execute_script("document.getElementById(\"pchkErrCheck\").click()")
-        if(주민번호2>4999999) :
-                driver.execute_script("document.getElementById(\"pchkFrgnrAt\").click()")
-                driver.execute_script("document.getElementById(\"pchkErrCheck\").click()")   
+        
                 
 
         #신고 버튼 눌렸을때 반응
@@ -180,7 +182,7 @@ def 주소정제(주소1):
 
 
 # 진짜로 읽을 파일
-df = pd.read_excel('테스트(12.26).xlsx')
+df = pd.read_excel('주소수정완료(12.26).xlsx')
 
 x = df.values.tolist()
 print(x)
@@ -197,17 +199,11 @@ for n in range(0,len(x)):
     #주민1정제
     #제로필을 사용하여 정제
     x[n][2]= str(x[n][2]).zfill(6)
-    #주소 정제
+    
+    #주소 정제 실시안함
     #주소정제가 실패한경우 입력 실패로 간주하고 다음으로 넘어감
-    주소1 =  x[n][5]
-    정제주소 = 주소정제(주소1)
-    if 정제주소==주소1:
-        입력실패번호.append(n)
-        print("신고 실패 주소 검색 불가")
-        print(str(n+1)+"/"+str(len(x)))
-        continue
-    else:
-        x[n][5] = 정제주소
+    #주소1 =  x[n][5]
+    #x[n][5] = 정제주소
     #print(x[n][5])
 
     #전화번호 정제
@@ -220,6 +216,7 @@ for n in range(0,len(x)):
     time.sleep(5)
 
 if 입력실패번호 == [] :
+    print("종료")
     quit()
     
 날짜 = year+month+date
@@ -232,7 +229,7 @@ for n in range(0,len(x)):
             y.append(x[n])
 
 # 엑셀 파일 출력
-df = pd.DataFrame(y,columns=['등록번호', '이름', '주민1','주민2','전화번호','주소1','주소2'])
-df.to_excel('주소수정필요(12.26).xlsx', sheet_name=str(날짜), index=False, header=True)
-print("주소수정 필요 파일 확인필요")
+#df = pd.DataFrame(y,columns=['등록번호', '이름', '주민1','주민2','전화번호','주소1','주소2'])
+#df.to_excel('주소수정필요(12.27).xlsx', sheet_name=str(날짜), index=False, header=True)
+#print("주소수정 필요 파일 확인필요")
 
