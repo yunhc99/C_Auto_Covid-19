@@ -14,14 +14,17 @@ from selenium.webdriver.support import expected_conditions as EC
 import chromedriver_autoinstaller
 chromedriver_autoinstaller.install()
 
-
+#변경 사항 
+#주소 정제 거르는것 삭제
+#이제 입력 불가 또는 에러 메세지만 출력
+#이후 원파일 생성
 driver = webdriver.Chrome()
 driver.get('https://covid19.kdca.go.kr/')
 
 
 root= Tk()
-root.title("코로나 자동 신고 0.6 제작자 : 윤호찬")
-root.geometry("600x400")
+root.title("코로나 자동 신고 0.7 제작자 : 윤호찬")
+root.geometry("700x200")
 root.resizable(False,False)
 
 #받아야 할 값
@@ -144,13 +147,7 @@ def main():
         #주소정제가 실패한경우 입력 실패로 간주하고 다음으로 넘어감
         주소1 =  x[n][5]
         정제주소 = 주소정제(주소1)
-        if 정제주소==주소1:
-            입력실패번호.append(n)
-            print(str(n+1)+"/"+str(len(x))+" 주소 검색 불가")
-            continue
-        else:
-            x[n][5] = 정제주소
-        #print(x[n][5])
+        x[n][5] = 정제주소
 
         #전화번호 정제
         정제전번 = str(x[n][4]).split('-')
@@ -313,7 +310,8 @@ def 자동입력(driver,이름, 주소1, 주소2, 주민번호1, 주민번호2, 
             alert.accept()
             print("신고완료") 
         else:
-            print(alert.text)
+            errromsg = alert.text
+            print(errromsg)
             alert.accept()
             raise NotImplementedError
         # 확인하기
