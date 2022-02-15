@@ -14,15 +14,14 @@ from selenium.webdriver.support import expected_conditions as EC
 import chromedriver_autoinstaller
 chromedriver_autoinstaller.install()
 
-co = Options()
-co.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
-driver = webdriver.Chrome(options=co)
+
+driver = webdriver.Chrome()
 driver.get('https://covid19.kdca.go.kr/')
 
 
 root= Tk()
-root.title("코로나 자동 신고 0.5")
-root.geometry("600x200")
+root.title("코로나 자동 신고 0.6 제작자 : 윤호찬")
+root.geometry("600x400")
 root.resizable(False,False)
 
 #받아야 할 값
@@ -121,10 +120,7 @@ def main():
     #cd C:\Program Files\Google\Chrome\Application
     #chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\ChromeTEST"
     #https://covid19.kdca.go.kr/
-    chrome_options = Options()
-    chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
-    chrome_driver = "chromedriver.exe" # Your Chrome Driver path
-    driver = webdriver.Chrome(chrome_driver, options=chrome_options)
+    global driver
     driver.implicitly_wait(3)
     #프레임 변경
     driver.switch_to.frame('base')
@@ -197,6 +193,7 @@ def main():
         #time.sleep(1)
     messagebox.showinfo("완료하였습니다.","신고가 완료되었습니다.\n"+savefile+"파일을 확인하세요")
     #button3['state']=tkinter.DISABLED
+    driver.close()
     global root
     root.quit()
     quit()    
@@ -316,6 +313,7 @@ def 자동입력(driver,이름, 주소1, 주소2, 주민번호1, 주민번호2, 
             alert.accept()
             print("신고완료") 
         else:
+            print(alert.text)
             alert.accept()
             raise NotImplementedError
         # 확인하기
